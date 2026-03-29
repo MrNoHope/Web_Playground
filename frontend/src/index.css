@@ -1,0 +1,48 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+body.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.header {
+  background-color: #f1f1f1;
+  padding: 15px;
+  border-bottom: 1px solid #ccc;
+}
+
+.dark-mode .header {
+  background-color: #1e1e1e;
+  border-bottom: 1px solid #333;
+}
+
+.admin-header {
+  background-color: #ffeaa7;
+}
+
+.dark-mode .admin-header {
+  background-color: #d63031;
+}
+
+nav a {
+  margin-right: 15px;
+  text-decoration: none;
+  color: inherit;
+  font-weight: bold;
+}
+
+.theme-btn {
+  margin: 15px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.main-content {
+  padding: 0 15px;
+}
