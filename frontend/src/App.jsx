@@ -4,40 +4,30 @@ import ClientLayout from './layouts/ClientLayout';
 import AdminLayout from './layouts/AdminLayout';
 import BoardGame from './pages/BoardGame';
 import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
+    if (isDarkMode) document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
   }, [isDarkMode]);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   return (
     <BrowserRouter>
-      <div className="app-container">
-        <button className="theme-btn" onClick={toggleTheme}>
-          {isDarkMode ? 'Chuyển sang Light Mode' : 'Chuyển sang Dark Mode'}
-        </button>
-        
-        <Routes>
-          <Route path="/" element={<ClientLayout />}>
-            <Route index element={<BoardGame />} />
-            <Route path="login" element={<Login />} />
-          </Route>
+      <Routes>
+        <Route path="/" element={<ClientLayout toggleTheme={toggleTheme} isDarkMode={isDarkMode} />}>
+          <Route index element={<BoardGame />} />
+          <Route path="login" element={<Login />} />
+        </Route>
 
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<div>Admin Page</div>} />
-          </Route>
-        </Routes>
-      </div>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
