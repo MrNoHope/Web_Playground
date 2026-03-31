@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 
 const SIZE = 12;
 
@@ -37,6 +38,20 @@ const Snake = ({ onBack }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [changeDir]);
 
+  const saveFinalScore = async (finalScore) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token && finalScore > 0) {
+        await axios.post('http://localhost:5000/api/users/score', 
+          { game_code: 'snake', score: finalScore }, 
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   useEffect(() => {
     if (lose) return;
     const t = setInterval(() => setTime(s => s + 1), 1000);
@@ -46,8 +61,18 @@ const Snake = ({ onBack }) => {
         let head = { ...nS[0] };
         head.x += dir.x; head.y += dir.y;
 
-        if (head.x < 0 || head.x >= SIZE || head.y < 0 || head.y >= SIZE) { setLose(true); return prev; }
-        for (let part of nS) { if (part.x === head.x && part.y === head.y) { setLose(true); return prev; } }
+        if (head.x < 0 || head.x >= SIZE || head.y < 0 || head.y >= SIZE) { 
+          setLose(true); 
+          saveFinalScore(score);
+          return prev; 
+        }
+        for (let part of nS) { 
+          if (part.x === head.x && part.y === head.y) { 
+            setLose(true); 
+            saveFinalScore(score);
+            return prev; 
+          } 
+        }
 
         nS.unshift(head);
         if (head.x === food.x && head.y === food.y) {
@@ -58,7 +83,7 @@ const Snake = ({ onBack }) => {
       });
     }, 250);
     return () => { clearInterval(move); clearInterval(t); }
-  }, [dir, lose, food]);
+  }, [dir, lose, food, score]);
 
   const handleRestart = () => {
     setSnake([{ x: 6, y: 6 }]); setFood({ x: 3, y: 3 });
@@ -87,12 +112,11 @@ const Snake = ({ onBack }) => {
           return <div key={i} style={{ width: '35px', height: '35px', backgroundColor: c, borderRadius: '4px' }} />;
         })}
       </div>
-      <p style={{ marginTop: '15px', color: 'var(--text-secondary)' }}>*Sử dụng 4 phím mũi tên để di chuyển</p>
       <div className="controls-group" style={{ marginTop: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="control-btn" onClick={onBack}>⬅ MENU</button>
-        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>🔄 CHƠI LẠI</button>
-        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>💾 LƯU</button>
-        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>📂 TẢI</button>
+        <button className="control-btn" onClick={onBack}>BACK</button>
+        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>CHƠI LẠI</button>
+        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>LƯU</button>
+        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>TẢI</button>
       </div>
     </div>
   );

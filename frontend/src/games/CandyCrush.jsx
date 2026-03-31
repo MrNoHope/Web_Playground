@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const SIZE = 8;
 const colors = ['#ff4757', '#ffa502', '#2ed573', '#1e90ff', '#9c88ff', '#eccc68'];
@@ -9,12 +10,25 @@ const CandyCrush = ({ onBack }) => {
   const [select, setSelect] = useState(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(180);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0) {
+      if (!isSaved && score > 0) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          axios.post('http://localhost:5000/api/users/score', 
+            { game_code: 'candy', score: score }, 
+            { headers: { Authorization: `Bearer ${token}` } }
+          ).catch(e => console.log(e));
+        }
+        setIsSaved(true);
+      }
+      return;
+    }
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, isSaved, score]);
 
   const handleCellClick = (i) => {
     if (timeLeft <= 0) return;
@@ -27,11 +41,11 @@ const CandyCrush = ({ onBack }) => {
     }
   };
 
-  const handleRestart = () => { setBoard(gen()); setSelect(null); setScore(0); setTimeLeft(180); };
+  const handleRestart = () => { setBoard(gen()); setSelect(null); setScore(0); setTimeLeft(180); setIsSaved(false); };
   const handleSave = () => { localStorage.setItem('save_candy', JSON.stringify({ board, score, timeLeft })); alert('Đã lưu!'); };
   const handleLoad = () => {
     const s = localStorage.getItem('save_candy');
-    if (s) { const d = JSON.parse(s); setBoard(d.board); setScore(d.score); setTimeLeft(d.timeLeft); setSelect(null); alert('Đã tải!'); }
+    if (s) { const d = JSON.parse(s); setBoard(d.board); setScore(d.score); setTimeLeft(d.timeLeft); setSelect(null); setIsSaved(false); alert('Đã tải!'); }
   };
 
   return (
@@ -39,7 +53,7 @@ const CandyCrush = ({ onBack }) => {
       <h2 style={{ color: '#9c88ff', margin: '0 0 10px 0' }}>Ghép Hàng 3</h2>
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '15px' }}>
         <div style={{ fontWeight: 'bold' }}>Điểm số: {score}</div>
-        <div style={{ fontWeight: 'bold' }}>Thời gian: {timeLeft}s</div>
+        <div style={{ fontWeight: 'bold' }}>{timeLeft <= 0 ? 'Hết giờ!' : `Thời gian: ${timeLeft}s`}</div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${SIZE}, 45px)`, gap: '4px', backgroundColor: 'var(--border-color)', padding: '10px', borderRadius: '8px' }}>
         {board.map((color, i) => (
@@ -47,10 +61,10 @@ const CandyCrush = ({ onBack }) => {
         ))}
       </div>
       <div className="controls-group" style={{ marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="control-btn" onClick={onBack}>⬅ MENU</button>
-        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>🔄 CHƠI LẠI</button>
-        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>💾 LƯU</button>
-        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>📂 TẢI</button>
+        <button className="control-btn" onClick={onBack}>BACK</button>
+        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>CHƠI LẠI</button>
+        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>LƯU</button>
+        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>TẢI</button>
       </div>
     </div>
   );

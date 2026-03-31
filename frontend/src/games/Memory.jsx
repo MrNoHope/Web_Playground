@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const colors = ['#ff4757','#ff4757','#ffa502','#ffa502','#2ed573','#2ed573','#1e90ff','#1e90ff','#9c88ff','#9c88ff','#eccc68','#eccc68','#000','#000','#555','#555'];
 const shuffle = (a) => a.sort(() => Math.random() - 0.5);
@@ -13,6 +14,19 @@ const Memory = ({ onBack }) => {
     if (matched.length === 16 || timeLeft <= 0) return;
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
+  }, [matched, timeLeft]);
+
+  useEffect(() => {
+    if (matched.length === 16) {
+      const finalScore = timeLeft * 10;
+      const token = localStorage.getItem('token');
+      if (token) {
+        axios.post('http://localhost:5000/api/users/score', 
+          { game_code: 'memory', score: finalScore }, 
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).catch(e => console.log(e));
+      }
+    }
   }, [matched, timeLeft]);
 
   useEffect(() => {
@@ -45,10 +59,10 @@ const Memory = ({ onBack }) => {
         })}
       </div>
       <div className="controls-group" style={{ marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="control-btn" onClick={onBack}>⬅ MENU</button>
-        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>🔄 CHƠI LẠI</button>
-        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>💾 LƯU</button>
-        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>📂 TẢI</button>
+        <button className="control-btn" onClick={onBack}>BACK</button>
+        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>CHƠI LẠI</button>
+        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>LƯU</button>
+        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>TẢI</button>
       </div>
     </div>
   );

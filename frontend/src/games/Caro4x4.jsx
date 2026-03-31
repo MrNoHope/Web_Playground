@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const SIZE = 10;
 
@@ -13,6 +14,28 @@ const Caro4x4 = ({ onBack }) => {
     return () => clearInterval(timer);
   }, [winner, timeLeft]);
 
+  const checkWin = (squares, index, player) => {
+    const x = index % SIZE;
+    const y = Math.floor(index / SIZE);
+    const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
+    
+    for (let [dx, dy] of directions) {
+      let count = 1;
+      for (let step = 1; step < 4; step++) {
+        let nx = x + dx * step, ny = y + dy * step;
+        if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && squares[ny * SIZE + nx] === player) count++;
+        else break;
+      }
+      for (let step = 1; step < 4; step++) {
+        let nx = x - dx * step, ny = y - dy * step;
+        if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && squares[ny * SIZE + nx] === player) count++;
+        else break;
+      }
+      if (count >= 4) return true;
+    }
+    return false;
+  };
+
   const botMove = (cB) => {
     let e = cB.map((v, i) => v === null ? i : null).filter(v => v !== null);
     if (e.length === 0) return cB;
@@ -21,11 +44,34 @@ const Caro4x4 = ({ onBack }) => {
     return newB;
   };
 
-  const handleCellClick = (index) => {
+  const handleCellClick = async (index) => {
     if (winner || timeLeft <= 0 || board[index] !== null) return;
     let newB = [...board];
     newB[index] = 'X';
+    
+    if (checkWin(newB, index, 'X')) {
+      setWinner('X (Bạn)');
+      setBoard(newB);
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          await axios.post('http://localhost:5000/api/users/score', 
+            { game_code: 'caro4', score: 100 }, 
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } catch (e) {
+        console.log(e);
+      }
+      return;
+    }
+
     newB = botMove(newB);
+    let botIndex = newB.findIndex((val, idx) => val === 'O' && board[idx] !== 'O');
+    if (botIndex !== -1 && checkWin(newB, botIndex, 'O')) {
+      setWinner('O (Máy)');
+    }
+    
     setBoard(newB);
   };
 
@@ -50,10 +96,10 @@ const Caro4x4 = ({ onBack }) => {
         ))}
       </div>
       <div className="controls-group" style={{ marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="control-btn" onClick={onBack}>⬅ MENU</button>
-        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>🔄 CHƠI LẠI</button>
-        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>💾 LƯU</button>
-        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>📂 TẢI</button>
+        <button className="control-btn" onClick={onBack}>BACK</button>
+        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>CHƠI LẠI</button>
+        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>LƯU</button>
+        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>TẢI</button>
       </div>
     </div>
   );

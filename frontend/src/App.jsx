@@ -5,6 +5,8 @@ import AdminLayout from './layouts/AdminLayout';
 import BoardGame from './pages/BoardGame';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -22,6 +24,8 @@ function App() {
         <Route path="/" element={<ClientLayout toggleTheme={toggleTheme} isDarkMode={isDarkMode} />}>
           <Route index element={<BoardGame />} />
           <Route path="login" element={<Login />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="ranking" element={<Leaderboard />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

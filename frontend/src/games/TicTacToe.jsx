@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const TicTacToe = ({ onBack }) => {
   const [board, setBoard] = useState(Array(9).fill(null));
@@ -28,12 +29,35 @@ const TicTacToe = ({ onBack }) => {
     return nB;
   };
 
-  const handleCellClick = (index) => {
+  const handleCellClick = async (index) => {
     if (winner || timeLeft <= 0 || board[index]) return;
-    let nB = [...board]; nB[index] = 'X';
+    let nB = [...board]; 
+    nB[index] = 'X';
+    
     let w = checkWin(nB);
-    if (!w) { nB = botMove(nB); w = checkWin(nB); }
-    setBoard(nB); setWinner(w);
+    if (w === 'X') {
+      setWinner('X (Bạn)');
+      setBoard(nB);
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          await axios.post('http://localhost:5000/api/users/score', 
+            { game_code: 'tictactoe', score: 100 }, 
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } catch (e) {
+        console.log(e);
+      }
+      return;
+    }
+
+    if (!w) { 
+      nB = botMove(nB); 
+      w = checkWin(nB); 
+      if (w === 'O') setWinner('O (Máy)');
+    }
+    setBoard(nB); 
   };
 
   const handleRestart = () => { setBoard(Array(9).fill(null)); setWinner(null); setTimeLeft(60); };
@@ -56,10 +80,10 @@ const TicTacToe = ({ onBack }) => {
         ))}
       </div>
       <div className="controls-group" style={{ marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="control-btn" onClick={onBack}>⬅ MENU</button>
-        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>🔄 CHƠI LẠI</button>
-        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>💾 LƯU</button>
-        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>📂 TẢI</button>
+        <button className="control-btn" onClick={onBack}>BACK</button>
+        <button className="control-btn" onClick={handleRestart} style={{ backgroundColor: '#e74c3c', color: '#fff' }}>CHƠI LẠI</button>
+        <button className="control-btn" onClick={handleSave} style={{ backgroundColor: '#00b894', color: '#fff' }}>LƯU</button>
+        <button className="control-btn" onClick={handleLoad} style={{ backgroundColor: '#fdcb6e', color: '#000' }}>TẢI</button>
       </div>
     </div>
   );
