@@ -6,9 +6,11 @@ const register = async (req, res) => {
   try {
     const { username, password } = req.body;
     
+    // Kiểm tra trùng tên
     const existingUser = await knex('users').where({ username }).first();
     if (existingUser) return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại' });
 
+    // Băm mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
     
     await knex('users').insert({ username, password: hashedPassword, role: 'client' });
@@ -25,17 +27,18 @@ const login = async (req, res) => {
     const user = await knex('users').where({ username }).first();
     if (!user) return res.status(400).json({ error: 'Sai tài khoản hoặc mật khẩu' });
 
+    // Trùng khớp mật khẩu
     let isValidPassword = false;
-    if (user.password === '123') isValidPassword = (password === '123'); 
-    else isValidPassword = await bcrypt.compare(password, user.password); 
+    if (user.password === '123') isValidPassword = (password === '123'); // Dành cho seed data
+    else isValidPassword = await bcrypt.compare(password, user.password); // Dành cho user tạo mới
 
     if (!isValidPassword) return res.status(400).json({ error: 'Sai tài khoản hoặc mật khẩu' });
 
+    // Tạo vé thông hành (Token)
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, 'chuot_phim_bi_mat', { expiresIn: '24h' });
 
     res.status(200).json({ message: 'Đăng nhập thành công', token, role: user.role });
   } catch (error) {
-    console.error("=== LỖI ĐĂNG NHẬP CHI TIẾT ===", error);
     res.status(500).json({ error: 'Lỗi server' });
   }
 };
